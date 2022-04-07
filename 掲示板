@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <title>mission_3-5</title>
+  </head>
+  
+  <body>
+      <form action="" method="post">
+      <p>名前：<input type="text" name="name" ></p>
+      <p>コメント：<input type="text" name="comment" ></p>
+      <p>パスワード：<input type="text" name="editpass" ></p>
+      <button type=”submit” name=”submit”>投稿</button>
+      <br>
+      <p>編集対象番号：<input type="text" name="edit" ></p>
+      <p>編集パスワード：<input type="text" name="editpass" ></p>
+      <button type=”submit” name=”submit”>編集</button>
+    </form>
+    <br>
+    <br>
+    <form action="" method="post">
+      <p>削除対象番号：<input type="text" name="del" ></p>
+      <p>パスワード：<input type="text" name="delpass" ></p>
+      <button type=”submit” name=”submit”>削除</button>
+    </form>
+    
+    
+    
+    <?php
+     $filename = "m3-5.txt";
+     $newfilename = "m3-5new.txt";
+     
+     $name = $_POST["name"];
+     $comment = $_POST["comment"];
+     $date = date("Y年m月d日 H時i分s秒");
+     $pass = $_POST["pass"];
+     $del = $_POST["del"];
+     $edit = $_POST["edit"];
+     $delpass = $_POST["delpass"];
+     $editpass = $_POST["editpass"];
+     
+     //番号を付ける
+     if(empty(file($filename))){
+         $num = 1;
+     }else{
+         $num = count(file($filename))+1;
+     }
+     
+     //名前とコメントに書き込みがあった場合
+     if (!empty($name) && !empty($comment))  {
+         //編集番号が空の場合
+         if(empty($edit)){
+             $fp = fopen($filename,"a");
+             fwrite($fp, $num."<>".$name."<>".$comment."<>".$date."<>".$pass.PHP_EOL);
+             fclose($fp);
+        //編集番号に書き込みがあった場合
+         }else{
+             $nfp=fopen($newfilename,"a");
+             $array = file($filename,FILE_IGNORE_NEW_LINES );
+             //配列ごとに処理
+             foreach($array as $arr){
+                 $data = explode("<>",$arr);
+                 //投稿番号と編集番号が一致している場合
+                 if($data[0] == $edit){
+                     //パスワードが一致している場合
+                     if($data[4] == $editpass) {
+                         fwrite($nfp,$data[0]."<>".$name."<>".$comment."<>".$date."<>".$editpass.PHP_EOL);
+                     //パスワードが一致していない場合
+                     }else{
+                         fwrite($nfp,$data[0]."<>".$data[1]."<>".$data[2]."<>".$data[3]."<>".$data[4].PHP_EOL);
+                         echo ("パスワードが一致していません");
+                     }
+                 //投稿番号と編集番号が異なる場合
+                 }else{
+                     fwrite($nfp,$data[0]."<>".$data[1]."<>".$data[2]."<>".$data[3]."<>".$data[4].PHP_EOL);
+                 }
+             }
+             fclose($fp);
+             fclose($nfp);
+             unlink($filename);
+             rename($newfilename, $filename); 
+         }
+     }
+     
+     //削除番号に書き込みがあった場合
+     if(!empty($del)){
+         $nfp=fopen($newfilename,"a");
+         $array = file($filename,FILE_IGNORE_NEW_LINES ); 
+         //配列ごとに処理
+         foreach($array as $arr){
+             $data = explode("<>",$arr);
+             //削除番号が一致している場合
+             if($data[0] == $del){
+                 //パスワードが一致している場合
+                 if($data[4] == $delpass){
+                     fwrite($nfp,$data[0]."<>".$data[1]."<>"."削除しました"."<>".$date."<>".$data[4].PHP_EOL); 
+                 //パスワードが異なる場合
+                 }else{
+                     fwrite($nfp,$arr.PHP_EOL);
+                     echo ("パスワードが一致していません");
+                 }
+            //削除番号が異なる場合
+             }else{
+                 fwrite($nfp,$arr.PHP_EOL);
+             }
+         }
+         fclose($nfp);
+         unlink($filename);
+         rename($newfilename, $filename); 
+     }
+
+//ファイルがある場合
+ if(file_exists($filename)){
+     $array = file($filename,FILE_IGNORE_NEW_LINES ); 
+     foreach($array as $arr){
+         $data=explode("<>",$arr);
+         echo "投稿番号：".$data[0]."<br>";
+         echo "名前：".$data[1]."<br>";
+         echo "コメント：".$data[2]."<br>";
+         echo "日時：".$data[3]."<br>";
+         echo "<br>";
+     }
+
+}
+    ?>
+  
+
+  </body>
+</html>
