@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <title>mission_5-1</title>
+    
+  </head>
+  
+  <body bgcolor="honeydew">
+      
+      <div style="background-color: #ffffe0;border-radius: 5px; border: 3px dashed #66cdaa;font-size: 100%; padding: 20px;"> <span style="color:#008b8b;font-size: 25px;"><center>掲示板</center></span></div>
+      <br>
+      <div style="margin:0em ;display:inline-block;position:relative;top:3px;padding:0 .5em;height:1.5em;line-height:1.5em;color:#ffff;background:#66cdaa;font-weight:bold;text-align:center;border-radius:5px 5px 0 0;">
+           投稿 </div>
+          <div style="background:rgba(255,255,255,0);border:solid 3px #66cdaa;border-radius:0 5px 5px;padding:20px;font-size: 100%;">
+              <form action="" method="post">
+      <input type="text" name="name" placeholder="名前" >
+      <input type="text" name="comment" placeholder="コメント">
+      <input type="text" name="pass" placeholder="パスワード">
+      <button type=”submit” name=”submit”>投稿</button>
+      </div>
+       <br>
+      <div style="margin:0em ;display:inline-block;position:relative;top:3px;padding:0 .5em;height:1.5em;line-height:1.5em;color:#ffff;background:#66cdaa;font-weight:bold;text-align:center;border-radius:5px 5px 0 0;">
+           編集</div>
+          <div style="background:rgba(255,255,255,0);border:solid 3px #66cdaa;border-radius:0 5px 5px;padding:20px;font-size: 100%;">
+              <form action="" method="post">
+      <input type="int" name="edit" placeholder="編集対象番号">
+      <input type="text" name="editpass" placeholder="パスワード">
+      <button type=”submit” name=”submit”>編集</button>
+      </div>       
+       </form>
+       <br>
+     <div style="margin:0em ;display:inline-block;position:relative;top:3px;padding:0 .5em;height:1.5em;line-height:1.5em;color:#ffff;background:#66cdaa;font-weight:bold;text-align:center;border-radius:5px 5px 0 0;">
+           削除 </div>
+          <div style="background:rgba(255,255,255,0);border:solid 3px #66cdaa;border-radius:0 5px 5px;padding:20px;font-size: 100%;">
+              <form action="" method="post">
+      <input type="text" name="del" placeholder="削除対象番号">
+      <input type="text" name="delpass" placeholder="パスワード">
+      <button type=”submit” name=”submit”>削除</button>
+      </div>   
+      <br>
+    
+    </form>
+    
+    
+    
+    <?php
+     //データベース作成
+     $dsn = 'データベース名';
+     $user = 'ユーザー名';
+     $password = 'パスワード';
+     $pdo = new PDO($dsn, $user, $password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING));
+     $sql = "CREATE TABLE IF NOT EXISTS mission5DB"
+     ." ("
+     . "id INT AUTO_INCREMENT PRIMARY KEY,"
+     . "name char(32),"
+     . "comment TEXT,"
+     . "date TEXT,"
+     . "password char(32)"
+     .");";
+     $stmt = $pdo->query($sql);
+     
+     //変数の定義
+     if (!empty($_POST["name"])) {
+         $name = $_POST["name"];
+     }
+     if (!empty($_POST["comment"])) {
+         $comment = $_POST["comment"];
+     }
+     if (!empty($_POST["pass"])) {
+         $pass = $_POST["pass"];
+     }
+     if (!empty($_POST["edit"])) {
+         $edit = $_POST["edit"];
+     }
+     
+     if (!empty($_POST["editpass"])) {
+         $editpass = $_POST["editpass"];
+     }
+     if (!empty($_POST["del"])) {
+         $del = $_POST["del"];
+     }
+     if (!empty($_POST["delpass"])) {
+         $delpass = $_POST["delpass"];
+     }
+     
+     
+     
+     
+     
+     
+     //名前とコメントに書き込みがあった場合
+     if (!empty($name) && !empty($comment))  {
+         
+         //編集番号が空の場合
+         if(empty($edit)){
+             $sql = $pdo -> prepare("INSERT INTO mission5DB (name, comment, date, password) VALUES (:name, :comment, :date, :password)");
+             $sql -> bindParam(':name', $dataname, PDO::PARAM_STR);
+             $sql -> bindParam(':comment', $datacomment, PDO::PARAM_STR);
+             $sql -> bindParam(':date', $datadate, PDO::PARAM_STR);
+             $sql -> bindParam(':password', $datapass, PDO::PARAM_STR);
+             $dataname = $name;
+             $datacomment = $comment;
+             $datadate = date("Y年m月d日 H時i分s秒");
+             $datapass = $pass;
+             $sql -> execute();
+             
+        //編集番号に書き込みがあった場合
+         }else{
+             $id = $edit; 
+             $sql = 'SELECT * FROM mission5DB WHERE id=:id ';
+             $stmt = $pdo->prepare($sql);                  
+             $stmt->bindParam(':id', $id, PDO::PARAM_INT); 
+             $stmt->execute();                             
+             $results = $stmt->fetch(); 
+             
+             //削除番号と投稿番号が一致した場合
+             if($edit == $results['id']){
+                     //パスワードが一致した場合
+                     if($editpass == $results['password']){
+                         $id = $edit; 
+                         $dataname = $name;
+                         $datacomment = $comment;
+                         $datadate = date("Y年m月d日 H時i分s秒");
+                         $datapass = $editpass;
+                         $sql = 'UPDATE mission5DB SET name=:name,comment=:comment, date=:date, password=:password WHERE id=:id';
+                         $stmt = $pdo->prepare($sql);
+                         $stmt -> bindParam(':name', $dataname, PDO::PARAM_STR);
+                         $stmt -> bindParam(':comment', $datacomment, PDO::PARAM_STR);
+                         $stmt -> bindParam(':date', $datadate, PDO::PARAM_STR);
+                         $stmt -> bindParam(':password', $datapass, PDO::PARAM_STR);
+                         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+                         $stmt->execute();
+                     }
+                     //パスワードが一致しなかった場合
+                     else{
+                         echo "パスワードが違います。<br>";
+                     }
+                 
+             }
+         }
+     }
+     
+     //削除番号に書き込みがあった場合
+     if(!empty($del)){
+         $id = $del; 
+         $sql = 'SELECT * FROM mission5DB WHERE id=:id ';
+         $stmt = $pdo->prepare($sql);                  
+         $stmt->bindParam(':id', $id, PDO::PARAM_INT); 
+         $stmt->execute();                             
+         $results = $stmt->fetch(); 
+         
+         //削除番号と投稿番号が一致した場合
+         if($del == $results['id']){
+             //パスワードが一致した場合
+             if($delpass == $results['password']){
+                 $sql = 'delete from mission5DB where id=:id';
+                 $stmt = $pdo->prepare($sql);
+                 $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+                 $stmt->execute();
+             }
+             //パスワードが異なった場合
+             else{
+                 echo "パスワードが違います。<br>";
+             }
+         } else{
+                 echo "a";}
+     }
+
+//表示
+$dsn = 'データベース名';
+     $user = 'ユーザー名';
+     $password = 'パスワード';
+     $pdo = new PDO($dsn, $user, $password, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING));
+    
+    $sql = 'SELECT * FROM mission5DB';
+    $stmt = $pdo->query($sql);
+    $results = $stmt->fetchAll();
+    foreach ($results as $data){
+         echo "<hr>";
+         echo '<div style="background-color:#f5fffa"><span style="color:#006400;">'."投稿番号：".$data['id']."<br>";
+         echo "名前：".$data['name']."<br>";
+         echo "コメント：".$data['comment']."<br>";
+         echo "日時：".$data['date']."<br>".'</span></div>';
+     }
+     ?>
+  </body>
+</html>
